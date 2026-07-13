@@ -11,13 +11,14 @@ from estenio.steps import ask_source, ask_type, ask_format, ask_url
 from estenio.downloader import download, detect_browser, convert_stories_url
 
 
+VERSION = "0.2.0"
 console = Console()
 
 
 def show_banner() -> None:
     """Display the welcome banner."""
     title = Text("Estenio", style="bold cyan")
-    subtitle = Text("v0.2.0 — YouTube + Instagram Downloader", style="dim")
+    subtitle = Text(f"v{VERSION} — YouTube + Instagram Downloader", style="dim")
     banner = Text.assemble(title, "\n", subtitle)
     console.print(Panel(banner, border_style="cyan"))
 
@@ -34,6 +35,21 @@ def show_missing_deps(missing: list) -> None:
 
 def main() -> None:
     """Main entry point: checks → welcome → loop( steps → download )."""
+    # --- CLI flags ---
+    if len(sys.argv) > 1:
+        arg = sys.argv[1].lower()
+        if arg in ("--version", "-v"):
+            show_banner()
+            sys.exit(0)
+        if arg in ("--help", "-h"):
+            show_banner()
+            console.print("\nUso: estenio\n")
+            console.print("CLI interativa para baixar vídeos e áudio do YouTube e Instagram.\n")
+            console.print("Flags:")
+            console.print("  --version, -v    Mostra a versão")
+            console.print("  --help, -h       Mostra esta ajuda\n")
+            sys.exit(0)
+
     # --- Pre-flight: dependency checks ---
     results = check_dependencies()
     if not all_present(results):

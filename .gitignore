@@ -23,3 +23,11 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+# Bundled ffmpeg binaries (downloaded, not committed)
+src/estenio/bin/ffmpeg-*
+!src/estenio/bin/.gitkeep
+
+# PyInstaller
+*.spec.bak
+*.pyinstaller

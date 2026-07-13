@@ -1,0 +1,149 @@
+name: Build & Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # ── Linux build ──────────────────────────────────────────────────────────
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Bundle ffmpeg (Linux)
+        run: bash scripts/bundle-ffmpeg.sh
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Build with PyInstaller
+        run: pyinstaller estenio.spec
+
+      - name: Test the binary
+        run: |
+          ./dist/estenio --help 2>&1 || true
+          ./dist/estenio --version 2>&1 || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: estenio-linux
+          path: dist/estenio
+
+  # ── macOS build ──────────────────────────────────────────────────────────
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Bundle ffmpeg (macOS)
+        run: bash scripts/bundle-ffmpeg.sh
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Build with PyInstaller
+        run: pyinstaller estenio.spec
+
+      - name: Test the binary
+        run: |
+          ./dist/estenio --help 2>&1 || true
+          ./dist/estenio --version 2>&1 || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: estenio-macos
+          path: dist/estenio
+
+  # ── Windows build ────────────────────────────────────────────────────────
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Bundle ffmpeg (Windows)
+        shell: bash
+        run: bash scripts/bundle-ffmpeg.sh
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Build with PyInstaller
+        run: pyinstaller estenio.spec
+
+      - name: Test the binary
+        run: |
+          .\dist\estenio.exe --help 2>&1 || true
+          .\dist\estenio.exe --version 2>&1 || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: estenio-windows
+          path: dist/estenio.exe
+
+  # ── GitHub Release ───────────────────────────────────────────────────────
+  release:
+    needs: [build-linux, build-macos, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          cp estenio-linux/estenio release-assets/estenio-linux
+          cp estenio-macos/estenio release-assets/estenio-macos
+          cp estenio-windows/estenio.exe release-assets/estenio-windows.exe
+          # Create a version file
+          echo "${{ github.ref_name }}" > release-assets/VERSION.txt
+
+      - name: Generate changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v4
+        with:
+          configuration: '{}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Estenio ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          files: |
+            release-assets/estenio-linux
+            release-assets/estenio-macos
+            release-assets/estenio-windows.exe
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

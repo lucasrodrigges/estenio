@@ -152,7 +152,7 @@ def test_translate_instagram_invalid_url():
 # ── download (integration with mock) ─────────────────────────────────────────
 
 def test_download_audio_success(monkeypatch):
-    def mock_run(cmd, stderr, text):
+    def mock_run(cmd, stderr, text, env=None):
         return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
 
     monkeypatch.setattr(subprocess, "run", mock_run)
@@ -161,7 +161,7 @@ def test_download_audio_success(monkeypatch):
 
 
 def test_download_video_failure(monkeypatch):
-    def mock_run(cmd, stderr, text):
+    def mock_run(cmd, stderr, text, env=None):
         return subprocess.CompletedProcess(
             args=cmd, returncode=1, stdout="",
             stderr="ERROR: [youtube] abc: Video unavailable"
@@ -174,7 +174,7 @@ def test_download_video_failure(monkeypatch):
 
 
 def test_download_both_success(monkeypatch):
-    def mock_run(cmd, stderr, text):
+    def mock_run(cmd, stderr, text, env=None):
         return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
 
     monkeypatch.setattr(subprocess, "run", mock_run)
@@ -185,7 +185,7 @@ def test_download_both_success(monkeypatch):
 def test_download_both_first_fails(monkeypatch):
     call_count = [0]
 
-    def mock_run(cmd, stderr, text):
+    def mock_run(cmd, stderr, text, env=None):
         call_count[0] += 1
         if call_count[0] == 1:
             return subprocess.CompletedProcess(
@@ -202,7 +202,7 @@ def test_download_both_first_fails(monkeypatch):
 
 
 def test_download_instagram_reels_success(monkeypatch):
-    def mock_run(cmd, stderr, text):
+    def mock_run(cmd, stderr, text, env=None):
         return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
 
     monkeypatch.setattr(subprocess, "run", mock_run)
@@ -215,7 +215,7 @@ def test_download_instagram_reels_success(monkeypatch):
 
 
 def test_download_instagram_stories_failure(monkeypatch):
-    def mock_run(cmd, stderr, text):
+    def mock_run(cmd, stderr, text, env=None):
         return subprocess.CompletedProcess(
             args=cmd, returncode=1, stdout="",
             stderr="This page requires login",
