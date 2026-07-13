@@ -1,3 +1,5 @@
+<!-- teste build -->
+
 # Estenio
 
 CLI interativa para baixar vídeos e áudio do YouTube, Reels e Stories do Instagram — sem flags, sem complicação.
