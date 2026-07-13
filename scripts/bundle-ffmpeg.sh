@@ -1,70 +1,97 @@
 #!/usr/bin/env bash
-# bundle-ffmpeg.sh — Download static ffmpeg binaries for all platforms.
+# bundle-ffmpeg.sh — Download static ffmpeg binaries.
 #
-# Usage:   bash scripts/bundle-ffmpeg.sh
-# Output:  src/estenio/bin/ffmpeg-linux
-#          src/estenio/bin/ffmpeg-macos
-#          src/estenio/bin/ffmpeg-windows.exe
+# Usage:
+#   bash scripts/bundle-ffmpeg.sh              # current platform only
+#   bash scripts/bundle-ffmpeg.sh --all        # all platforms
+#   bash scripts/bundle-ffmpeg.sh linux        # specific platform
+#   bash scripts/bundle-ffmpeg.sh macos windows
 #
-# Sources:  Official static builds from ffmpeg.org / BtbN / gyan.dev
-#            (these are the same builds yt-dlp recommends)
+# Sources:  Official static builds (same ones yt-dlp recommends)
 
 set -euo pipefail
 
 BIN_DIR="$(cd "$(dirname "$0")/../src/estenio/bin" && pwd)"
 mkdir -p "$BIN_DIR"
 
-# ── Linux (amd64) ────────────────────────────────────────────────────────────
-# BtbN static build — widely used, updated regularly
-LINUX_URL="https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz"
-LINUX_TARBALL="/tmp/ffmpeg-linux.tar.xz"
+# ── Parse args ───────────────────────────────────────────────────────────────
+PLATFORMS=()
 
-echo "⬇  Baixando ffmpeg Linux..."
-curl -sSL --retry 3 -o "$LINUX_TARBALL" "$LINUX_URL"
+if [ $# -eq 0 ]; then
+    # Default: current platform
+    case "$(uname -s)" in
+        Linux)  PLATFORMS=(linux) ;;
+        Darwin) PLATFORMS=(macos) ;;
+        MINGW*|MSYS*|CYGWIN*) PLATFORMS=(windows) ;;
+        *) echo "ERRO: sistema não reconhecido" >&2; exit 1 ;;
+    esac
+else
+    for arg in "$@"; do
+        case "$arg" in
+            --all) PLATFORMS=(linux macos windows); break ;;
+            linux|macos|windows) PLATFORMS+=("$arg") ;;
+            *) echo "ERRO: plataforma inválida '$arg'. Use: linux, macos, windows, --all" >&2; exit 1 ;;
+        esac
+    done
+fi
 
-echo "   Extraindo..."
-tar -xf "$LINUX_TARBALL" -C /tmp/
-# The tarball contains: ffmpeg-master-latest-linux64-gpl/bin/ffmpeg
-cp "/tmp/ffmpeg-master-latest-linux64-gpl/bin/ffmpeg" "$BIN_DIR/ffmpeg-linux"
-chmod +x "$BIN_DIR/ffmpeg-linux"
-rm -rf "/tmp/ffmpeg-master-latest-linux64-gpl" "$LINUX_TARBALL"
-echo "   ✅ ffmpeg-linux ($(du -h "$BIN_DIR/ffmpeg-linux" | cut -f1))"
+# ── Download functions ───────────────────────────────────────────────────────
 
-# ── macOS (amd64) ────────────────────────────────────────────────────────────
-# BtbN also has a macOS build, but evermeet/FFmpeg static is more reliable.
-# Using the "ffmpeg" standalone binary from evermeet.
-MACOS_URL="https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip"
-MACOS_ZIP="/tmp/ffmpeg-macos.zip"
+_download_linux() {
+    local url="https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz"
+    local tarball="/tmp/ffmpeg-linux.tar.xz"
 
-echo "⬇  Baixando ffmpeg macOS..."
-curl -sSL --retry 3 -o "$MACOS_ZIP" "$MACOS_URL"
+    echo "⬇  Baixando ffmpeg Linux..."
+    curl -sSL --retry 3 -o "$tarball" "$url"
 
-echo "   Extraindo..."
-unzip -oq "$MACOS_ZIP" -d /tmp/ffmpeg-macos-extract/
-# evermeet zip contains just "ffmpeg"
-cp "/tmp/ffmpeg-macos-extract/ffmpeg" "$BIN_DIR/ffmpeg-macos"
-chmod +x "$BIN_DIR/ffmpeg-macos"
-rm -rf "/tmp/ffmpeg-macos-extract" "$MACOS_ZIP"
-echo "   ✅ ffmpeg-macos ($(du -h "$BIN_DIR/ffmpeg-macos" | cut -f1))"
+    echo "   Extraindo..."
+    tar -xf "$tarball" -C /tmp/
+    cp "/tmp/ffmpeg-master-latest-linux64-gpl/bin/ffmpeg" "$BIN_DIR/ffmpeg-linux"
+    chmod +x "$BIN_DIR/ffmpeg-linux"
+    rm -rf "/tmp/ffmpeg-master-latest-linux64-gpl" "$tarball"
+    echo "   ✅ ffmpeg-linux ($(du -h "$BIN_DIR/ffmpeg-linux" | cut -f1))"
+}
 
-# ── Windows (amd64) ─────────────────────────────────────────────────────────
-# gyan.dev essential build — most widely recommended for Windows
-WINDOWS_URL="https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
-WINDOWS_ZIP="/tmp/ffmpeg-windows.zip"
+_download_macos() {
+    local url="https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip"
+    local zipfile="/tmp/ffmpeg-macos.zip"
 
-echo "⬇  Baixando ffmpeg Windows..."
-curl -sSL --retry 3 -o "$WINDOWS_ZIP" "$WINDOWS_URL"
+    echo "⬇  Baixando ffmpeg macOS..."
+    curl -sSL --retry 3 -o "$zipfile" "$url"
 
-echo "   Extraindo..."
-unzip -oq "$WINDOWS_ZIP" -d /tmp/ffmpeg-windows-extract/
-# gyan.dev: ffmpeg-release-essentials/bin/ffmpeg.exe inside a versioned folder
-WIN_EXTRACT_DIR=$(ls -d /tmp/ffmpeg-windows-extract/ffmpeg-* 2>/dev/null | head -1)
-cp "$WIN_EXTRACT_DIR/bin/ffmpeg.exe" "$BIN_DIR/ffmpeg-windows.exe"
-chmod +x "$BIN_DIR/ffmpeg-windows.exe" 2>/dev/null || true
-rm -rf "/tmp/ffmpeg-windows-extract" "$WINDOWS_ZIP"
-echo "   ✅ ffmpeg-windows.exe ($(du -h "$BIN_DIR/ffmpeg-windows.exe" | cut -f1))"
+    echo "   Extraindo..."
+    unzip -oq "$zipfile" -d /tmp/ffmpeg-macos-extract/
+    cp "/tmp/ffmpeg-macos-extract/ffmpeg" "$BIN_DIR/ffmpeg-macos"
+    chmod +x "$BIN_DIR/ffmpeg-macos"
+    rm -rf "/tmp/ffmpeg-macos-extract" "$zipfile"
+    echo "   ✅ ffmpeg-macos ($(du -h "$BIN_DIR/ffmpeg-macos" | cut -f1))"
+}
 
-# ── Summary ─────────────────────────────────────────────────────────────────
+_download_windows() {
+    local url="https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+    local zipfile="/tmp/ffmpeg-windows.zip"
+
+    echo "⬇  Baixando ffmpeg Windows..."
+    curl -sSL --retry 3 -o "$zipfile" "$url"
+
+    echo "   Extraindo..."
+    unzip -oq "$zipfile" -d /tmp/ffmpeg-windows-extract/
+    local extract_dir
+    extract_dir=$(ls -d /tmp/ffmpeg-windows-extract/ffmpeg-* 2>/dev/null | head -1)
+    cp "$extract_dir/bin/ffmpeg.exe" "$BIN_DIR/ffmpeg-windows.exe"
+    rm -rf "/tmp/ffmpeg-windows-extract" "$zipfile"
+    echo "   ✅ ffmpeg-windows.exe ($(du -h "$BIN_DIR/ffmpeg-windows.exe" | cut -f1))"
+}
+
+# ── Execute ──────────────────────────────────────────────────────────────────
+for plat in "${PLATFORMS[@]}"; do
+    case "$plat" in
+        linux)   _download_linux ;;
+        macos)   _download_macos ;;
+        windows) _download_windows ;;
+    esac
+done
+
 echo ""
-echo "✅ Todos os binários ffmpeg foram baixados para: $BIN_DIR"
+echo "✅ Binários ffmpeg em: $BIN_DIR"
 ls -lh "$BIN_DIR/"
