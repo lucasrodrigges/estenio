@@ -57,13 +57,13 @@ Se preferir instalar a partir do código-fonte com um script que configura tudo 
 ### Linux / macOS
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/lucasrodrigges/estenio/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/m-calendar/estenio/main/scripts/install.sh | bash
 ```
 
 ### Windows (PowerShell como Administrador)
 
 ```powershell
-irm https://raw.githubusercontent.com/lucasrodrigges/estenio/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/m-calendar/estenio/main/scripts/install.ps1 | iex
 ```
 
 O script detecta automaticamente seu sistema e instala Python, ffmpeg e todas as dependências necessárias.
