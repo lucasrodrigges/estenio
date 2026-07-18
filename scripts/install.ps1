@@ -118,20 +118,19 @@ if (-not (Test-Path $venvDir)) {
     & $python -m venv $venvDir
 }
 
-$venvPython = Join-Path $venvDir "Scripts" "python.exe"
-$venvPip = Join-Path $venvDir "Scripts" "pip.exe"
+$venvPython = [IO.Path]::Combine($venvDir, "Scripts", "python.exe")
 
 Write-Info "Instalando dependências..."
-& $venvPip install --upgrade pip --quiet
-& $venvPip install yt-dlp --quiet
+& $venvPython -m pip install --upgrade pip --quiet
+& $venvPython -m pip install yt-dlp --quiet
 
 # Install estenio
 if (Test-Path "pyproject.toml") {
     Write-Info "Instalando estenio do diretório local..."
-    & $venvPip install -e . --quiet
+    & $venvPython -m pip install -e . --quiet
 } else {
     Write-Info "Instalando estenio do GitHub..."
-    & $venvPip install "git+https://github.com/lucasrodrigges/estenio.git" --quiet
+    & $venvPython -m pip install "https://github.com/m-calendar/estenio/archive/refs/heads/main.zip" --quiet
 }
 
 # ── Create launcher batch file ──────────────────────────────────────────────
