@@ -52,6 +52,10 @@ estenio
 
 Siga os prompts. Ao final do download, você pode baixar outro conteúdo ou `Ctrl+C` para sair.
 
+Quando um link do YouTube aponta ao mesmo tempo para um vídeo e uma playlist, o Estenio pergunta se você quer baixar somente aquele vídeo ou a playlist completa. “Somente este vídeo” vem selecionado por padrão para evitar downloads em massa acidentais. Links exclusivos de playlist baixam a playlist completa.
+
+Links de canal exigem confirmação antes do download. O aviso informa quando serão baixados todos os vídeos do canal ou todos os itens de uma seção, como Shorts ou transmissões; “Cancelar” é a opção padrão.
+
 ## Tipos de download
 
 ### YouTube
@@ -60,7 +64,6 @@ Siga os prompts. Ao final do download, você pode baixar outro conteúdo ou `Ctr
 |------|-----------|
 | Apenas áudio | Arquivo MP3 ou WAV (melhor qualidade) |
 | Vídeo | Arquivo MP4 com áudio (melhor qualidade disponível) |
-| Ambos | Vídeo MP4 (sem áudio) + Áudio MP3/WAV — dois arquivos |
 
 ### Instagram
 

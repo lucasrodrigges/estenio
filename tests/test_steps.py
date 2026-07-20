@@ -8,7 +8,14 @@ triggering real interactive prompts.
 
 import pytest
 
-from estenio.steps import ask_source, ask_type, ask_format, ask_url
+from estenio.steps import (
+    ask_source,
+    ask_type,
+    ask_format,
+    ask_url,
+    ask_youtube_download_scope,
+    ask_channel_download_confirmation,
+)
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -63,13 +70,13 @@ def test_ask_source_choices(monkeypatch):
 # ── ask_type ─────────────────────────────────────────────────────────────────
 
 def test_ask_type_youtube(monkeypatch):
-    """YouTube source returns audio/video/both."""
+    """YouTube source returns only audio/video."""
     monkeypatch.setattr("estenio.steps.questionary.select", _mock_select)
     result = ask_type("youtube")
     values = [c.value for c in result.choices if hasattr(c, 'value')]
     assert "audio" in values
     assert "video" in values
-    assert "both" in values
+    assert "both" not in values
     assert "reels" not in values
     assert "stories" not in values
 
@@ -110,6 +117,30 @@ def test_ask_format_audio_prompts(monkeypatch):
     values = [c.value for c in result.choices if hasattr(c, 'value')]
     assert "mp3" in values
     assert "wav" in values
+
+
+# ── conditional YouTube prompts ─────────────────────────────────────────────
+
+def test_ask_youtube_download_scope_defaults_to_single(monkeypatch):
+    monkeypatch.setattr("estenio.steps.questionary.select", _mock_select)
+    result = ask_youtube_download_scope()
+    values = [choice.value for choice in result.choices]
+    assert values == ["single", "playlist"]
+    assert "playlist" in result.message.lower()
+
+
+def test_ask_channel_confirmation_defaults_to_cancel(monkeypatch):
+    monkeypatch.setattr("estenio.steps.questionary.select", _mock_select)
+    result = ask_channel_download_confirmation()
+    values = [choice.value for choice in result.choices]
+    assert values == [False, True]
+    assert "todos os vídeos" in result.message.lower()
+
+
+def test_ask_channel_section_confirmation_uses_section_text(monkeypatch):
+    monkeypatch.setattr("estenio.steps.questionary.select", _mock_select)
+    result = ask_channel_download_confirmation(is_section=True)
+    assert "seção" in result.message.lower()
 
 
 # ── ask_url ──────────────────────────────────────────────────────────────────

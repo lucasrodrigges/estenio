@@ -31,7 +31,6 @@ def ask_type(source: str) -> str:
         choices=[
             questionary.Choice("Apenas áudio", value="audio"),
             questionary.Choice("Vídeo (MP4 com áudio)", value="video"),
-            questionary.Choice("Ambos (vídeo + áudio separados)", value="both"),
         ],
     ).unsafe_ask()
 
@@ -40,7 +39,7 @@ def ask_format(download_type: str) -> str:
     """Ask the output format.
 
     For 'video' and Instagram types, format is implicit — skipped by caller.
-    For 'audio' and 'both', we ask the audio format.
+    For 'audio', we ask the audio format.
 
     Returns the format string: 'mp3', 'wav', or 'mp4'.
     """
@@ -52,6 +51,33 @@ def ask_format(download_type: str) -> str:
         choices=[
             questionary.Choice("MP3", value="mp3"),
             questionary.Choice("WAV", value="wav"),
+        ],
+    ).unsafe_ask()
+
+
+def ask_youtube_download_scope() -> str:
+    """Ask whether a hybrid YouTube link means one video or its playlist."""
+    return questionary.select(
+        "Este vídeo faz parte de uma playlist. O que deseja baixar?",
+        choices=[
+            questionary.Choice("Somente este vídeo", value="single"),
+            questionary.Choice("Playlist completa", value="playlist"),
+        ],
+    ).unsafe_ask()
+
+
+def ask_channel_download_confirmation(is_section: bool = False) -> bool:
+    """Warn about a bulk channel download and ask whether to continue."""
+    target = (
+        "todos os itens desta seção do canal"
+        if is_section
+        else "todos os vídeos do canal"
+    )
+    return questionary.select(
+        f"Atenção: {target} serão baixados. Deseja continuar?",
+        choices=[
+            questionary.Choice("Cancelar", value=False),
+            questionary.Choice("Continuar e baixar", value=True),
         ],
     ).unsafe_ask()
 

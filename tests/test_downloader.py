@@ -10,6 +10,10 @@ from estenio.downloader import (
     download,
     detect_browser,
     convert_stories_url,
+    get_youtube_channel_link_kind,
+    has_youtube_playlist_reference,
+    is_youtube_video_url,
+    is_youtube_video_with_playlist,
 )
 
 
@@ -40,18 +44,86 @@ def test_build_video():
     assert cmd[-1] == "https://youtube.com/watch?v=abc"
 
 
-def test_build_both():
-    cmd = build_command("youtube", "both", "mp3", "https://youtube.com/watch?v=abc")
-    assert ";;;" in cmd
-    sep = cmd.index(";;;")
-    video_cmd = cmd[:sep]
-    audio_cmd = cmd[sep + 1:]
-    assert video_cmd[0] == "yt-dlp"
-    assert "-f" in video_cmd
-    assert audio_cmd[0] == "yt-dlp"
-    assert "-x" in audio_cmd
-    assert "mp3" in audio_cmd
-    assert audio_cmd[-1] == "https://youtube.com/watch?v=abc"
+def test_build_single_video_scope():
+    cmd = build_command(
+        "youtube", "video", None,
+        "https://youtube.com/watch?v=abc&list=PL123",
+        download_scope="single",
+    )
+    assert "--no-playlist" in cmd
+    assert "--yes-playlist" not in cmd
+
+
+def test_build_playlist_audio_scope():
+    cmd = build_command(
+        "youtube", "audio", "mp3",
+        "https://youtube.com/watch?v=abc&list=PL123",
+        download_scope="playlist",
+    )
+    assert "--yes-playlist" in cmd
+    assert "--no-playlist" not in cmd
+    assert "-x" in cmd
+    assert "mp3" in cmd
+
+
+# ── YouTube URL classification ──────────────────────────────────────────────
+
+@pytest.mark.parametrize("url", [
+    "https://youtube.com/watch?v=abc&list=PL123",
+    "https://www.youtube.com/watch?list=PL123&v=abc",
+    "https://music.youtube.com/watch?v=abc&list=PL123",
+    "https://youtu.be/abc?list=PL123",
+    "https://youtube.com/shorts/abc?list=PL123",
+    "https://youtube.com/live/abc?list=PL123",
+])
+def test_detect_youtube_video_with_playlist(url):
+    assert is_youtube_video_url(url)
+    assert has_youtube_playlist_reference(url)
+    assert is_youtube_video_with_playlist(url)
+
+
+@pytest.mark.parametrize("url", [
+    "https://fake-youtube.com/watch?v=abc&list=PL123",
+    "https://youtube.com.evil.example/watch?v=abc&list=PL123",
+    "https://youtube.com/watch?v=abc&list=",
+    "https://youtube.com/watch?v=abc",
+])
+def test_reject_non_hybrid_youtube_urls(url):
+    assert not is_youtube_video_with_playlist(url)
+
+
+def test_detect_playlist_only_url():
+    url = "https://youtube.com/playlist?list=PL123"
+    assert has_youtube_playlist_reference(url)
+    assert not is_youtube_video_url(url)
+    assert not is_youtube_video_with_playlist(url)
+
+
+@pytest.mark.parametrize("url", [
+    "https://youtube.com/@creator",
+    "https://youtube.com/channel/UC123",
+    "https://youtube.com/c/creator",
+    "https://youtube.com/user/creator",
+    "https://youtube.com/@creator?list=PL123",
+])
+def test_detect_youtube_channel_links(url):
+    assert get_youtube_channel_link_kind(url) == "channel"
+
+
+@pytest.mark.parametrize("url", [
+    "https://youtube.com/@creator/videos",
+    "https://youtube.com/channel/UC123/shorts",
+    "https://youtube.com/c/creator/streams",
+    "https://youtube.com/user/creator/videos",
+])
+def test_detect_youtube_channel_section_links(url):
+    assert get_youtube_channel_link_kind(url) == "section"
+
+
+def test_reject_non_channel_youtube_path():
+    assert get_youtube_channel_link_kind(
+        "https://youtube.com/watch?v=abc"
+    ) is None
 
 
 # ── build_command: Instagram ─────────────────────────────────────────────────
@@ -171,34 +243,6 @@ def test_download_video_failure(monkeypatch):
     error = download("youtube", "video", None, "https://youtube.com/watch?v=abc")
     assert error is not None
     assert "indisponível" in error.lower()
-
-
-def test_download_both_success(monkeypatch):
-    def mock_run(cmd, stderr, text, env=None):
-        return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
-
-    monkeypatch.setattr(subprocess, "run", mock_run)
-    error = download("youtube", "both", "mp3", "https://youtube.com/watch?v=abc")
-    assert error is None
-
-
-def test_download_both_first_fails(monkeypatch):
-    call_count = [0]
-
-    def mock_run(cmd, stderr, text, env=None):
-        call_count[0] += 1
-        if call_count[0] == 1:
-            return subprocess.CompletedProcess(
-                args=cmd, returncode=1, stdout="",
-                stderr="ERROR: Private video"
-            )
-        return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
-
-    monkeypatch.setattr(subprocess, "run", mock_run)
-    error = download("youtube", "both", "mp3", "https://youtube.com/watch?v=abc")
-    assert error is not None
-    assert "privado" in error.lower()
-    assert call_count[0] == 1
 
 
 def test_download_instagram_reels_success(monkeypatch):

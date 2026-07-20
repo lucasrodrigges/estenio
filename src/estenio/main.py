@@ -7,8 +7,22 @@ from rich.panel import Panel
 from rich.text import Text
 
 from estenio.checks import check_dependencies, all_present
-from estenio.steps import ask_source, ask_type, ask_format, ask_url
-from estenio.downloader import download, detect_browser, convert_stories_url
+from estenio.steps import (
+    ask_source,
+    ask_type,
+    ask_format,
+    ask_url,
+    ask_youtube_download_scope,
+    ask_channel_download_confirmation,
+)
+from estenio.downloader import (
+    download,
+    detect_browser,
+    convert_stories_url,
+    get_youtube_channel_link_kind,
+    has_youtube_playlist_reference,
+    is_youtube_video_with_playlist,
+)
 
 
 VERSION = "0.2.0"
@@ -68,13 +82,29 @@ def main() -> None:
             # Step 2: Type (depends on source)
             download_type = ask_type(source)
 
-            # Step 3: Format (conditional — only for YouTube audio/both)
+            # Step 3: Format (conditional — only for YouTube audio)
             audio_format = None
             if source == "youtube":
                 audio_format = ask_format(download_type)
 
             # Step 4: URL
             url = ask_url(source, download_type)
+
+            # --- YouTube: protect bulk downloads and choose playlist scope ---
+            download_scope = None
+            if source == "youtube":
+                channel_kind = get_youtube_channel_link_kind(url)
+                if channel_kind:
+                    should_continue = ask_channel_download_confirmation(
+                        is_section=channel_kind == "section"
+                    )
+                    if not should_continue:
+                        console.print("\n[dim]Download cancelado.[/dim]\n")
+                        continue
+                elif is_youtube_video_with_playlist(url):
+                    download_scope = ask_youtube_download_scope()
+                elif has_youtube_playlist_reference(url):
+                    download_scope = "playlist"
 
             # --- Instagram: convert stories URL + detect browser ---
             browser = None
@@ -94,7 +124,14 @@ def main() -> None:
 
             # --- Download ---
             console.print(f"\n[bold yellow]⬇  Iniciando download...[/bold yellow]\n")
-            error = download(source, download_type, audio_format, url, browser)
+            error = download(
+                source,
+                download_type,
+                audio_format,
+                url,
+                browser,
+                download_scope,
+            )
 
             if error:
                 console.print(f"\n[bold red]❌ {error}[/bold red]")

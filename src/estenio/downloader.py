@@ -5,6 +5,7 @@ import re
 import shutil
 import subprocess
 from dataclasses import dataclass
+from urllib.parse import parse_qs, urlparse
 
 
 # ---------------------------------------------------------------------------
@@ -154,8 +155,87 @@ def _resolve_from_desktop(desktop: str) -> str | None:
 
 
 # ---------------------------------------------------------------------------
-# URL conversion
+# URL classification and conversion
 # ---------------------------------------------------------------------------
+
+def _is_official_youtube_host(hostname: str | None) -> bool:
+    """Return whether hostname belongs to YouTube without network access."""
+    if not hostname:
+        return False
+
+    host = hostname.lower().rstrip(".")
+    return host == "youtu.be" or host == "youtube.com" or host.endswith(".youtube.com")
+
+
+def has_youtube_playlist_reference(url: str) -> bool:
+    """Return whether an official YouTube URL has a non-empty ``list`` query."""
+    parsed = urlparse(url.strip())
+    if not _is_official_youtube_host(parsed.hostname):
+        return False
+
+    return any(value.strip() for value in parse_qs(
+        parsed.query, keep_blank_values=True
+    ).get("list", []))
+
+
+def is_youtube_video_url(url: str) -> bool:
+    """Return whether an official YouTube URL identifies a specific video."""
+    parsed = urlparse(url.strip())
+    if not _is_official_youtube_host(parsed.hostname):
+        return False
+
+    query = parse_qs(parsed.query, keep_blank_values=True)
+    if any(value.strip() for value in query.get("v", [])):
+        return True
+
+    path_parts = [part for part in parsed.path.split("/") if part]
+    host = (parsed.hostname or "").lower().rstrip(".")
+    if host == "youtu.be":
+        return bool(path_parts)
+
+    return (
+        len(path_parts) >= 2
+        and path_parts[0].lower() in {"shorts", "live"}
+        and bool(path_parts[1].strip())
+    )
+
+
+def is_youtube_video_with_playlist(url: str) -> bool:
+    """Return whether URL identifies both one video and a playlist."""
+    return is_youtube_video_url(url) and has_youtube_playlist_reference(url)
+
+
+def get_youtube_channel_link_kind(url: str) -> str | None:
+    """Classify an official YouTube channel URL as ``channel`` or ``section``."""
+    parsed = urlparse(url.strip())
+    if not _is_official_youtube_host(parsed.hostname):
+        return None
+
+    host = (parsed.hostname or "").lower().rstrip(".")
+    if host == "youtu.be":
+        return None
+
+    parts = [part for part in parsed.path.split("/") if part]
+    if not parts:
+        return None
+
+    section_index: int | None = None
+    if parts[0].startswith("@") and len(parts[0]) > 1:
+        section_index = 1
+    elif parts[0].lower() in {"channel", "c", "user"} and len(parts) >= 2:
+        section_index = 2
+    else:
+        return None
+
+    if len(parts) == section_index:
+        return "channel"
+    if (
+        len(parts) == section_index + 1
+        and parts[section_index].lower() in {"videos", "shorts", "streams"}
+    ):
+        return "section"
+    return None
+
 
 def convert_stories_url(url: str) -> str:
     """Convert a plain Instagram profile URL to the stories endpoint.
@@ -189,15 +269,17 @@ def build_command(
     audio_format: str | None,
     url: str,
     browser: str | None = None,
+    download_scope: str | None = None,
 ) -> list[str]:
     """Build the yt-dlp command args for the given options.
 
     Args:
         source: Platform identifier ('youtube' or 'instagram').
-        download_type: 'audio', 'video', 'both', 'reels', or 'stories'.
+        download_type: 'audio', 'video', 'reels', or 'stories'.
         audio_format: 'mp3' or 'wav' (ignored for video/reels/stories).
         url: The media URL.
         browser: Browser name for --cookies-from-browser (Instagram only).
+        download_scope: YouTube scope: ``single``, ``playlist``, or None.
 
     Returns:
         Command as a list of strings ready for subprocess.run.
@@ -212,6 +294,10 @@ def build_command(
 
     # --- YouTube ---
     cmd = ["yt-dlp"]
+    if download_scope == "single":
+        cmd.append("--no-playlist")
+    elif download_scope == "playlist":
+        cmd.append("--yes-playlist")
 
     if download_type == "audio":
         cmd.extend([
@@ -228,21 +314,6 @@ def build_command(
         ])
         cmd.append(url)
 
-    elif download_type == "both":
-        video_cmd = [
-            "yt-dlp",
-            "-f", "bestvideo[ext=mp4]",
-            "-o", "%(title)s-video.%(ext)s",
-        ]
-        audio_cmd = [
-            "yt-dlp",
-            "-x",
-            "--audio-format", audio_format or "mp3",
-            "--audio-quality", "0",
-            "-o", "%(title)s-audio.%(ext)s",
-        ]
-        return video_cmd + [";;;"] + audio_cmd + [url]
-
     return cmd
 
 
@@ -256,31 +327,18 @@ def download(
     audio_format: str | None,
     url: str,
     browser: str | None = None,
+    download_scope: str | None = None,
 ) -> str | None:
     """Execute the full download and return an error message or None on success.
 
     Returns:
         None if download succeeded, or a Portuguese error message string.
     """
-    cmd = build_command(source, download_type, audio_format, url, browser)
+    cmd = build_command(
+        source, download_type, audio_format, url, browser, download_scope
+    )
 
-    # Handle YouTube "both" type: two sequential downloads
-    if ";;;" in cmd:
-        sep_idx = cmd.index(";;;")
-        video_cmd = cmd[:sep_idx]
-        audio_cmd = cmd[sep_idx + 1:]
-
-        result = subprocess.run(video_cmd, stderr=subprocess.PIPE, text=True)
-        if result.returncode != 0:
-            return translate_error(result.stderr)
-
-        result = subprocess.run(audio_cmd, stderr=subprocess.PIPE, text=True)
-        if result.returncode != 0:
-            return translate_error(result.stderr)
-
-        return None
-
-    # Single download — show progress, capture stderr for errors
+    # Show native progress and capture stderr for translated errors
     result = subprocess.run(cmd, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
         return translate_error(result.stderr)
