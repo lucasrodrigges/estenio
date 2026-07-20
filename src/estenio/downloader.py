@@ -5,9 +5,6 @@ import re
 import shutil
 import subprocess
 from dataclasses import dataclass
-from pathlib import Path
-
-from estenio import _get_ffmpeg_path
 
 
 # ---------------------------------------------------------------------------
@@ -253,20 +250,6 @@ def build_command(
 # Download execution
 # ---------------------------------------------------------------------------
 
-def _env_with_ffmpeg() -> dict[str, str]:
-    """Return an environment dict with the bundled ffmpeg on PATH.
-
-    If a bundled ffmpeg is available, its directory is prepended to PATH
-    so yt-dlp finds it automatically. Otherwise returns os.environ unchanged.
-    """
-    env = os.environ.copy()
-    ffmpeg_path = _get_ffmpeg_path()
-    if ffmpeg_path:
-        ffmpeg_dir = str(Path(ffmpeg_path).parent)
-        env['PATH'] = ffmpeg_dir + os.pathsep + env.get('PATH', '')
-    return env
-
-
 def download(
     source: str,
     download_type: str,
@@ -280,7 +263,6 @@ def download(
         None if download succeeded, or a Portuguese error message string.
     """
     cmd = build_command(source, download_type, audio_format, url, browser)
-    env = _env_with_ffmpeg()
 
     # Handle YouTube "both" type: two sequential downloads
     if ";;;" in cmd:
@@ -288,18 +270,18 @@ def download(
         video_cmd = cmd[:sep_idx]
         audio_cmd = cmd[sep_idx + 1:]
 
-        result = subprocess.run(video_cmd, stderr=subprocess.PIPE, text=True, env=env)
+        result = subprocess.run(video_cmd, stderr=subprocess.PIPE, text=True)
         if result.returncode != 0:
             return translate_error(result.stderr)
 
-        result = subprocess.run(audio_cmd, stderr=subprocess.PIPE, text=True, env=env)
+        result = subprocess.run(audio_cmd, stderr=subprocess.PIPE, text=True)
         if result.returncode != 0:
             return translate_error(result.stderr)
 
         return None
 
     # Single download — show progress, capture stderr for errors
-    result = subprocess.run(cmd, stderr=subprocess.PIPE, text=True, env=env)
+    result = subprocess.run(cmd, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
         return translate_error(result.stderr)
 

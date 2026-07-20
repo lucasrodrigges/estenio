@@ -1,5 +1,3 @@
-<!-- teste build -->
-
 # Estenio
 
 CLI interativa para baixar vídeos e áudio do YouTube, Reels e Stories do Instagram — sem flags, sem complicação.
@@ -18,55 +16,25 @@ $ estenio
 
 ## 🚀 Instalação
 
-**Baixe o executável pronto para o seu sistema e execute — zero configuração.**
-
-| Plataforma | Download |
-|------------|----------|
-| 🐧 **Linux** | [estenio-linux](https://github.com/lucasrodrigges/estenio/releases/latest/download/estenio-linux) |
-| 🍎 **macOS** | [estenio-macos](https://github.com/lucasrodrigges/estenio/releases/latest/download/estenio-macos) |
-| 🪟 **Windows** | [estenio-windows.exe](https://github.com/lucasrodrigges/estenio/releases/latest/download/estenio-windows.exe) |
+A instalação é feita exclusivamente pelo terminal. O script detecta o sistema, verifica o Python, configura um ambiente isolado e instala ffmpeg e as dependências necessárias quando preciso.
 
 ### Linux / macOS
 
 ```bash
-# Dê permissão de execução e execute
-chmod +x estenio-linux
-./estenio-linux
-```
-
-### Windows
-
-Basta executar o arquivo `.exe` — dê um duplo clique ou execute pelo terminal:
-
-```powershell
-.\estenio-windows.exe
-```
-
-> 💡 **Dica:** No Linux/macOS, mova o binário para `~/.local/bin/` para poder executar `estenio` de qualquer lugar:
-> ```bash
-> mv estenio-linux ~/.local/bin/estenio
-> estenio
-> ```
-
----
-
-## 🛠 Instalação via Script (alternativa)
-
-Se preferir instalar a partir do código-fonte com um script que configura tudo automaticamente:
-
-### Linux / macOS
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/m-calendar/estenio/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/lucasrodrigges/estenio/main/scripts/install.sh | bash
 ```
 
 ### Windows (PowerShell como Administrador)
 
 ```powershell
-irm https://raw.githubusercontent.com/m-calendar/estenio/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/lucasrodrigges/estenio/main/scripts/install.ps1 | iex
 ```
 
-O script detecta automaticamente seu sistema e instala Python, ffmpeg e todas as dependências necessárias.
+Depois, abra um novo terminal e execute:
+
+```bash
+estenio
+```
 
 ---
 

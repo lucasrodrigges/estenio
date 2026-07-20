@@ -13,11 +13,7 @@ dependencies = [
 ]
 optional-dependencies.dev = [
     "pytest>=8.0.0",
-    "pyinstaller>=6.0.0",
 ]
-
-[tool.setuptools.package-data]
-estenio = ["bin/*"]
 
 [project.scripts]
 estenio = "estenio.main:main"

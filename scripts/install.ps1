@@ -130,7 +130,7 @@ if (Test-Path "pyproject.toml") {
     & $venvPython -m pip install -e . --quiet
 } else {
     Write-Info "Instalando estenio do GitHub..."
-    & $venvPython -m pip install "https://github.com/m-calendar/estenio/archive/refs/heads/main.zip" --quiet
+    & $venvPython -m pip install "https://github.com/lucasrodrigges/estenio/archive/refs/heads/main.zip" --quiet
 }
 
 # ── Create launcher batch file ──────────────────────────────────────────────
