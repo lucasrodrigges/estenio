@@ -2,7 +2,7 @@
 
 ## Glossary
 
-- **Estenio** — Aplicação CLI interativa, passo a passo, para download de mídia de plataformas online. Versão 0.2.0.
+- **Estenio** — Aplicação CLI interativa, passo a passo, para download de mídia de plataformas online. Versão 0.3.0.
 - **Source** — Plataforma de origem suportada: YouTube ou Instagram.
 - **Download type** — Depende da Source. YouTube: Audio (só áudio) ou Video (MP4 com áudio). Instagram: Reels (link único de um reel) ou Stories (link do perfil do usuário).
 - **Format** — Formato do arquivo de saída. YouTube áudio: WAV ou MP3. YouTube vídeo: MP4. Instagram: MP4 (fixo, sem escolha de formato).
@@ -11,6 +11,7 @@
 - **ffmpeg** — Ferramenta externa usada pelo yt-dlp para merge de faixas e conversão de formatos.
 - **Output directory** — Diretório onde os arquivos são salvos. Padrão: diretório atual de onde `estenio` foi invocado.
 - **Pre-flight check** — Na inicialização, verifica se `yt-dlp` e `ffmpeg` estão instalados. Se faltar, mostra o comando e sai.
+- **Self-update** — Atualização solicitada por `estenio --update`. Um processo auxiliar espera o Estenio encerrar e força a reinstalação da versão mais recente da branch `main`, sem usar o cache do pip; isso evita bloqueio do executável em uso no Windows.
 - **URL validation** — Validação simples (não-vazio) para todas as URLs. O yt-dlp é responsável por validar o formato e reportar erros, que o ERROR_MAP traduz.
 - **YouTube playlist** — Coleção de vídeos identificada por uma referência `list` em um link do YouTube.
 - **Hybrid YouTube link** — Link que identifica simultaneamente um vídeo específico e uma YouTube playlist. Nesse caso, o usuário escolhe entre baixar somente o vídeo indicado ou a playlist completa.

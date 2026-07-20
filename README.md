@@ -1,12 +1,12 @@
 # Estenio
 
-CLI interativa para baixar vídeos e áudio do YouTube, Reels e Stories do Instagram — sem flags, sem complicação.
+CLI interativa para baixar vídeos e áudio do YouTube, Reels e Stories do Instagram — sem complicação.
 
 ```
 $ estenio
 ┌──────────────────────────┐
 │         Estenio          │
-│  v0.2.0 — YT + Instagram │
+│  v0.3.0 — YT + Instagram │
 └──────────────────────────┘
 ? O que você quer baixar? Instagram
 ? Tipo de download: Reels (link único)
@@ -34,6 +34,24 @@ Depois, abra um novo terminal e execute:
 
 ```bash
 estenio
+```
+
+### Atualização
+
+Para instalar a versão mais recente diretamente da branch `main`:
+
+```bash
+estenio --update
+```
+
+Mantenha o terminal aberto até aparecer a confirmação. O atualizador ignora o cache e força a reinstalação para garantir que os arquivos sejam substituídos, inclusive no Windows.
+
+Flags disponíveis:
+
+```text
+estenio --version
+estenio --update
+estenio --help
 ```
 
 ---

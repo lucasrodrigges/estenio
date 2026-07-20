@@ -26,6 +26,22 @@ def _prepare_main(monkeypatch, first_source="youtube"):
     monkeypatch.setattr(main_module, "ask_format", lambda download_type: "mp4")
 
 
+def test_update_flag_starts_update_before_dependency_checks(monkeypatch):
+    monkeypatch.setattr(main_module.sys, "argv", ["estenio", "--update"])
+    monkeypatch.setattr(main_module, "start_update", lambda: None, raising=False)
+    monkeypatch.setattr(
+        main_module,
+        "check_dependencies",
+        lambda: pytest.fail("dependency checks must not run during update"),
+    )
+    monkeypatch.setattr(main_module.console, "print", lambda *args, **kwargs: None)
+
+    with pytest.raises(SystemExit) as exc:
+        main_module.main()
+
+    assert exc.value.code == 0
+
+
 def test_channel_cancellation_returns_to_start_without_download(monkeypatch):
     _prepare_main(monkeypatch)
     monkeypatch.setattr(

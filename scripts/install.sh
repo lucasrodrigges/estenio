@@ -125,15 +125,15 @@ source "$INSTALL_DIR/venv/bin/activate"
 
 info "Instalando dependências..."
 pip install --upgrade pip --quiet
-pip install yt-dlp --quiet
+pip install --upgrade yt-dlp --quiet
 
 # Install estenio from source if local, otherwise from GitHub
 if [ -f "pyproject.toml" ]; then
     info "Instalando estenio do diretório local..."
-    pip install -e . --quiet
+    pip install --upgrade --force-reinstall -e . --quiet
 else
     info "Instalando estenio do GitHub..."
-    pip install "git+https://github.com/lucasrodrigges/estenio.git" --quiet
+    pip install --upgrade --force-reinstall --no-cache-dir "git+https://github.com/lucasrodrigges/estenio.git" --quiet
 fi
 
 deactivate

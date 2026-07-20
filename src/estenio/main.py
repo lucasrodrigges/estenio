@@ -6,6 +6,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 
+from estenio import __version__
 from estenio.checks import check_dependencies, all_present
 from estenio.steps import (
     ask_source,
@@ -15,6 +16,7 @@ from estenio.steps import (
     ask_youtube_download_scope,
     ask_channel_download_confirmation,
 )
+from estenio.updater import start_update
 from estenio.downloader import (
     download,
     detect_browser,
@@ -25,7 +27,7 @@ from estenio.downloader import (
 )
 
 
-VERSION = "0.2.0"
+VERSION = __version__
 console = Console()
 
 
@@ -61,7 +63,19 @@ def main() -> None:
             console.print("CLI interativa para baixar vídeos e áudio do YouTube e Instagram.\n")
             console.print("Flags:")
             console.print("  --version, -v    Mostra a versão")
+            console.print("  --update          Atualiza o Estenio")
             console.print("  --help, -h       Mostra esta ajuda\n")
+            sys.exit(0)
+        if arg == "--update":
+            error = start_update()
+            if error:
+                console.print(f"\n[bold red]❌ {error}[/bold red]\n")
+                sys.exit(1)
+            console.print(
+                "\n[bold cyan]Atualização iniciada.[/bold cyan] "
+                "Mantenha este terminal aberto; o processo continuará após "
+                "o Estenio encerrar.\n"
+            )
             sys.exit(0)
 
     # --- Pre-flight: dependency checks ---

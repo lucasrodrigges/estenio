@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "estenio"
-version = "0.2.0"
+dynamic = ["version"]
 description = "Interactive CLI for downloading media from online platforms"
 requires-python = ">=3.10"
 dependencies = [
@@ -17,6 +17,9 @@ optional-dependencies.dev = [
 
 [project.scripts]
 estenio = "estenio.main:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "estenio.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
