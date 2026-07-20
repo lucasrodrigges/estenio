@@ -129,11 +129,11 @@ def test_ask_youtube_download_scope_defaults_to_single(monkeypatch):
     assert "playlist" in result.message.lower()
 
 
-def test_ask_channel_confirmation_defaults_to_cancel(monkeypatch):
+def test_ask_channel_confirmation_defaults_to_continue(monkeypatch):
     monkeypatch.setattr("estenio.steps.questionary.select", _mock_select)
     result = ask_channel_download_confirmation()
     values = [choice.value for choice in result.choices]
-    assert values == [False, True]
+    assert values == [True, False]
     assert "todos os vídeos" in result.message.lower()
 
 

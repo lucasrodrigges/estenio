@@ -76,8 +76,8 @@ def ask_channel_download_confirmation(is_section: bool = False) -> bool:
     return questionary.select(
         f"Atenção: {target} serão baixados. Deseja continuar?",
         choices=[
-            questionary.Choice("Cancelar", value=False),
             questionary.Choice("Continuar e baixar", value=True),
+            questionary.Choice("Cancelar", value=False),
         ],
     ).unsafe_ask()
 

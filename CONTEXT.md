@@ -18,7 +18,7 @@
 - **YouTube download scope** — Alcance de um download iniciado por um Hybrid YouTube link: somente o vídeo indicado ou a playlist completa. O vídeo único é a escolha padrão.
 - **YouTube channel link** — Link oficial de canal nos formatos `@handle`, `/channel/ID`, `/c/nome` ou `/user/nome`; pode representar todos os vídeos do canal.
 - **YouTube channel section link** — YouTube channel link direcionado a uma seção como `/videos`, `/shorts` ou `/streams`; representa todos os itens daquela seção, não necessariamente todos os vídeos do canal.
-- **Channel download confirmation** — Confirmação obrigatória antes de baixar um YouTube channel link ou YouTube channel section link. Cancelar é a escolha padrão e retorna ao início do fluxo sem download.
+- **Channel download confirmation** — Confirmação obrigatória antes de baixar um YouTube channel link ou YouTube channel section link. Continuar e baixar é a escolha padrão; cancelar retorna ao início do fluxo sem download.
 - **Instagram auth** — Sempre usa `yt-dlp --cookies-from-browser <navegador>` nos downloads do Instagram. O navegador é detectado automaticamente na ordem: `$BROWSER` → `xdg-settings get default-web-browser` → fallback firefox → chrome → chromium. Se nenhum for encontrado, erro claro.
 - **Browser check timing** — A detecção do navegador acontece no momento do download (não no startup). Se o usuário só usa YouTube, nunca vê o assunto.
 - **Download progress** — O progresso nativo do yt-dlp é mostrado diretamente no terminal, sem modificações.

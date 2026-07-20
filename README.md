@@ -54,7 +54,7 @@ Siga os prompts. Ao final do download, você pode baixar outro conteúdo ou `Ctr
 
 Quando um link do YouTube aponta ao mesmo tempo para um vídeo e uma playlist, o Estenio pergunta se você quer baixar somente aquele vídeo ou a playlist completa. “Somente este vídeo” vem selecionado por padrão para evitar downloads em massa acidentais. Links exclusivos de playlist baixam a playlist completa.
 
-Links de canal exigem confirmação antes do download. O aviso informa quando serão baixados todos os vídeos do canal ou todos os itens de uma seção, como Shorts ou transmissões; “Cancelar” é a opção padrão.
+Links de canal exigem confirmação antes do download. O aviso informa quando serão baixados todos os vídeos do canal ou todos os itens de uma seção, como Shorts ou transmissões; “Continuar e baixar” é a primeira opção.
 
 ## Tipos de download
 
